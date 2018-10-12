@@ -250,7 +250,7 @@ HANDLE PhCreateThread(
         &threadHandle,
         NULL
         );
-    
+
     // NOTE: PhCreateThread previously used CreateThread with callers using GetLastError()
     // for checking errors. We need to preserve this behavior for compatibility -dmex
     // TODO: Migrate code over to PhCreateThreadEx and remove this function.
@@ -594,6 +594,7 @@ SIZE_T PhCountStringZ(
     _In_ PWSTR String
     )
 {
+#if !defined(_M_ARM64)
     if (PhpVectorLevel >= PH_VECTOR_LEVEL_SSE2)
     {
         PWSTR p;
@@ -632,6 +633,7 @@ SIZE_T PhCountStringZ(
         }
     }
     else
+#endif
     {
         return wcslen(String);
     }
@@ -1271,6 +1273,7 @@ BOOLEAN PhEqualStringRef(
     s1 = String1->Buffer;
     s2 = String2->Buffer;
 
+#if !defined(_M_ARM64)
     if (PhpVectorLevel >= PH_VECTOR_LEVEL_SSE2)
     {
         length = l1 / 16;
@@ -1310,6 +1313,7 @@ BOOLEAN PhEqualStringRef(
         l1 = (l1 & 15) / sizeof(WCHAR);
     }
     else
+#endif
     {
         length = l1 / sizeof(ULONG_PTR);
 
@@ -1407,6 +1411,7 @@ ULONG_PTR PhFindCharInStringRef(
 
     if (!IgnoreCase)
     {
+#if !defined(_M_ARM64)
         if (PhpVectorLevel >= PH_VECTOR_LEVEL_SSE2)
         {
             SIZE_T length16;
@@ -1436,6 +1441,7 @@ ULONG_PTR PhFindCharInStringRef(
                 } while (--length16 != 0);
             }
         }
+#endif
 
         if (length != 0)
         {
@@ -1493,6 +1499,7 @@ ULONG_PTR PhFindLastCharInStringRef(
 
     if (!IgnoreCase)
     {
+#if !defined(_M_ARM64)
         if (PhpVectorLevel >= PH_VECTOR_LEVEL_SSE2)
         {
             SIZE_T length16;
@@ -1525,6 +1532,7 @@ ULONG_PTR PhFindLastCharInStringRef(
                 buffer += 16 / sizeof(WCHAR);
             }
         }
+#endif
 
         if (length != 0)
         {
@@ -5948,8 +5956,10 @@ VOID PhFillMemoryUlong(
     _In_ SIZE_T Count
     )
 {
+#if !defined(_M_ARM64)
     __m128i pattern;
     SIZE_T count;
+#endif
 
     if (PhpVectorLevel < PH_VECTOR_LEVEL_SSE2)
     {
@@ -5964,6 +5974,7 @@ VOID PhFillMemoryUlong(
         return;
     }
 
+#if !defined(_M_ARM64)
     if ((ULONG_PTR)Memory & 0xf)
     {
         switch ((ULONG_PTR)Memory & 0xf)
@@ -6016,6 +6027,7 @@ VOID PhFillMemoryUlong(
         *Memory++ = Value;
         break;
     }
+#endif
 }
 
 /**
@@ -6031,8 +6043,10 @@ VOID PhDivideSinglesBySingle(
     _In_ SIZE_T Count
     )
 {
+#if !defined(_M_ARM64)
     PFLOAT endA;
     __m128 b;
+#endif
 
     if (PhpVectorLevel < PH_VECTOR_LEVEL_SSE2)
     {
@@ -6042,6 +6056,7 @@ VOID PhDivideSinglesBySingle(
         return;
     }
 
+#if !defined(_M_ARM64)
     if ((ULONG_PTR)A & 0xf)
     {
         switch ((ULONG_PTR)A & 0xf)
@@ -6100,4 +6115,5 @@ VOID PhDivideSinglesBySingle(
         *A++ /= B;
         break;
     }
+#endif
 }
